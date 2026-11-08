@@ -1,0 +1,67 @@
+AUTO THEREMIN - installing in FL Studio (Windows)
+=================================================
+APT Industrial  -  Model AT-1
+
+1. Copy the whole "Auto Theremin.vst3" folder into:
+       C:\Program Files\Common Files\VST3\
+   (Windows will ask for administrator permission - click Continue.)
+
+2. In FL Studio: Options > Manage plugins > Find installed plugins.
+   Tick the star next to "Auto Theremin" so it shows in your plugin lists.
+
+3. Add it to a project: Channel rack > + > Auto Theremin.
+
+"Auto Theremin.exe" is a standalone version you can run without FL Studio
+(choose your audio and MIDI devices with the Options button).
+
+
+THE THREE MODES (keys at the top)
+---------------------------------
+AUTO  Plays the curves on the plotter screen, following FL Studio's playhead.
+      Press PLAY on the plugin to hear the pattern without starting the song.
+LIVE  Play it like a real theremin with a PS5 DualSense controller, or drag
+      the mouse on the FIELD screen (left-right = pitch, up-down = volume).
+MIDI  Play from a keyboard or the piano roll. One voice; notes glide into
+      each other (GLIDE knob), velocity sets loudness, mod wheel adds vibrato.
+
+
+DRAWING CURVES (CURVE screen, AUTO mode)
+----------------------------------------
+NODE tool   click to place a note node, drag to move it
+            drag the small diamond between two nodes to bend the curve
+            double-click a node to delete it, right-click for its shape
+            Shift-drag to select several; hold Alt to ignore the snap grid
+DRAW tool   sketch freehand; the line turns into editable nodes
+ERASE tool  drag over nodes to remove them
+Shapes      SMOOTH (eased S-curve), LINEAR, HOLD (stay then jump) and
+            SWOOP (hold, then slide into the next note - the classic theremin
+            portamento). Keys 1-4 change the shape of selected nodes.
+VOL lane    draw silences and swells. Theremin players "play the rests":
+            dip the volume between notes to separate them.
+Mouse wheel scrolls notes; Ctrl+wheel zooms time; Shift+wheel scrolls time;
+            Alt+wheel zooms notes. FIT shows the whole pattern again.
+
+
+PS5 DUALSENSE (LIVE mode)
+-------------------------
+Plug it in with USB-C, or pair it over Bluetooth. The lamp next to
+"LIVE INPUT" lights when it's found.
+Pitch by:  Touchpad (smoothest), Gyro Tilt (tilt left/right), Right Stick,
+           or Right Stick (Glide) - the stick moves the pitch and it stays
+           put when you let go.
+Volume by: R2 or L2 trigger (squeeze = louder, release = silence),
+           Left Stick Up, or Touchpad Up/Down (one finger does both).
+Buttons:   Cross = hold the current pitch    Triangle = record on/off
+           Square = re-centre the tilt       D-pad up/down = octave
+           Options = play/stop the pattern
+Recording: arm REC, start playback, and play. Your performance is written
+           into the curves (you can then tidy it node by node in AUTO mode).
+
+If the controller isn't detected: close Steam (Steam Input can take over the
+controller) and DS4Windows, then reload the plugin.
+
+
+Presets
+-------
+8 factory presets with example curves: use the programme window at the top
+or FL Studio's own preset menu for the plugin.

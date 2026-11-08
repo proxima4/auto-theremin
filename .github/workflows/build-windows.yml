@@ -1,0 +1,39 @@
+# Builds the Auto Theremin VST3 (and standalone app) for Windows every time
+# you push changes to GitHub. Download the result from the Actions tab.
+name: Build Auto Theremin (Windows)
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore: [ '**.md', 'INSTALL.txt' ]
+  workflow_dispatch:        # adds a "Run workflow" button in the Actions tab
+
+jobs:
+  windows:
+    name: Windows VST3
+    runs-on: windows-latest
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Configure (downloads JUCE and SDL3 automatically)
+        run: cmake -S . -B build -A x64
+
+      - name: Build Release
+        run: cmake --build build --config Release --target AutoTheremin_VST3 AutoTheremin_Standalone --parallel
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path package | Out-Null
+          Copy-Item -Recurse "build/AutoTheremin_artefacts/Release/VST3/Auto Theremin.vst3" package/
+          Copy-Item "build/AutoTheremin_artefacts/Release/Standalone/Auto Theremin.exe" package/
+          Copy-Item INSTALL.txt package/
+          Copy-Item -Recurse Resources/fonts/OFL-*.txt package/
+
+      - name: Upload the plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutoTheremin-Windows
+          path: package/
+          retention-days: 30
