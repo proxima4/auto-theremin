@@ -149,6 +149,11 @@ EngineParams Processor::readParams (double bpm) const
 
 void Processor::handleMidi (const juce::MidiMessage& m)
 {
+    if (m.isAllNotesOff() || m.isAllSoundOff())   // CC 120/123 - checked before the controller branch, which would swallow them
+    {
+        heldNotes.clear();
+        return;
+    }
     if (m.isNoteOn())
     {
         heldNotes.erase (std::remove (heldNotes.begin(), heldNotes.end(), m.getNoteNumber()), heldNotes.end());
@@ -168,8 +173,6 @@ void Processor::handleMidi (const juce::MidiMessage& m)
         if (m.getControllerNumber() == 1) modWheel = m.getControllerValue() / 127.0f;
         else if (m.getControllerNumber() == 11 || m.getControllerNumber() == 7) expression = m.getControllerValue() / 127.0f;
     }
-    else if (m.isAllNotesOff() || m.isAllSoundOff())
-        heldNotes.clear();
 }
 
 void Processor::handleLiveButtons (const GamepadSnapshot& s)
@@ -190,7 +193,13 @@ void Processor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer
 {
     juce::ScopedNoDenormals noDenormals;
     const int n = buffer.getNumSamples();
-    if ((int) pitchBuf.size() < n) { buffer.clear(); return; }   // host broke its promise; stay safe
+    if ((int) pitchBuf.size() < n)   // host broke its promise; stay safe, but never lose a note-off
+    {
+        if (getMode() == Mode::Midi)
+            for (const auto m : midi) handleMidi (m.getMessage());
+        buffer.clear();
+        return;
+    }
     hostStop.beginBlock (getPlayHead(), midi);
 
     // ---- pattern hand-over from the editor (never blocks)
@@ -352,8 +361,11 @@ void Processor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer
         }
     }
 
-    prevBlockP = pitchBuf[(size_t) n - 1];
-    prevBlockV = volBuf[(size_t) n - 1];
+    if (n > 0)   // zero-length host calls have no last sample
+    {
+        prevBlockP = pitchBuf[(size_t) n - 1];
+        prevBlockV = volBuf[(size_t) n - 1];
+    }
 
     // ---- render
     const auto params = readParams (bpm);
