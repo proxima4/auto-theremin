@@ -5,7 +5,7 @@ name: Build Auto Theremin (Windows)
 on:
   push:
     branches: [ main ]
-    tags: [ 'v*' ]           # pushing a tag like v1.0.1 publishes a Release
+    tags: [ 'v*', 'V*' ]           # pushing a tag like v1.0.1 publishes a Release
     paths-ignore: [ '**.md', 'INSTALL.txt' ]
   workflow_dispatch:        # adds a "Run workflow" button in the Actions tab
 

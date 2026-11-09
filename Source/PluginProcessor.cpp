@@ -100,6 +100,7 @@ void Processor::prepareToPlay (double sampleRate, int samplesPerBlock)
     outR.assign ((size_t) n, 0.0f);
     scopeTmp.assign ((size_t) n, 0.0f);
     setLatencySamples (engine.getLatencySamples());
+    hostStop.prepare (sampleRate);
 }
 
 double Processor::patternLengthBeats() const
@@ -174,6 +175,8 @@ void Processor::handleMidi (const juce::MidiMessage& m)
 void Processor::handleLiveButtons (const GamepadSnapshot& s)
 {
     if (! pressInit) { std::copy (std::begin (s.pressCount), std::end (s.pressCount), lastPress); pressInit = true; return; }
+    for (int b = 0; b < BtnCount; ++b)
+        if (s.pressCount[b] != lastPress[b]) livePressed = true;
     auto pressed = [&] (int b) { const bool r = s.pressCount[b] != lastPress[b]; lastPress[b] = s.pressCount[b]; return r; };
     if (pressed (BtnDpadUp))   liveOctaveShift.store (juce::jmin (3, liveOctaveShift.load() + 1));
     if (pressed (BtnDpadDown)) liveOctaveShift.store (juce::jmax (-3, liveOctaveShift.load() - 1));
@@ -188,6 +191,7 @@ void Processor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer
     juce::ScopedNoDenormals noDenormals;
     const int n = buffer.getNumSamples();
     if ((int) pitchBuf.size() < n) { buffer.clear(); return; }   // host broke its promise; stay safe
+    hostStop.beginBlock (getPlayHead(), midi);
 
     // ---- pattern hand-over from the editor (never blocks)
     if (patternDirty.load())
@@ -295,6 +299,20 @@ void Processor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer
             }
             pad->setLight ((((uint32_t) (60 + 195 * tv)) << 16) | (((uint32_t) (25 + 140 * tv)) << 8) | (uint32_t) (10 + 40 * tv));
         }
+        // After an FL Stop: stay silent until the player plays again (trigger
+        // released and pressed, any button, or a touch on the field pad).
+        const bool fieldNow = fieldActive.load();
+        if (liveMuted)
+        {
+            if (tv < 0.02f) liveRearm = true;
+            if ((liveRearm && tv > 0.05f) || livePressed || (fieldNow && ! lastFieldActive))
+                liveMuted = false;
+            else
+                tv = 0.0f;
+        }
+        livePressed = false;
+        lastFieldActive = fieldNow;
+
         const float tp = invert ? 1.0f - liveRaw : liveRaw;
         liveV = tv;
         liveP01.store (tp); liveV01.store (tv);
@@ -367,6 +385,23 @@ void Processor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer
     displayPitch.store (engine.getCurrentPitch());
     displayVol.store (engine.getCurrentVolume());
     if (internal) internalPpq += n * beatsPerSample;
+
+    hostStop.endBlock (buffer, [this] { panic(); });
+}
+
+// Runs on the audio thread once the stop fade has reached silence.
+void Processor::panic()
+{
+    internalPlay.store (false);      // the plugin must not keep playing the pattern itself
+    heldNotes.clear();
+    prevBlockV = 0.0f;
+    engine.reset();                  // echo, reverb, oversampler, volume
+    if (getMode() == Mode::Live)
+    {
+        liveMuted = true;
+        liveRearm = false;
+        livePressed = false;
+    }
 }
 
 int Processor::readRecorded (std::vector<RecPoint>& out)
@@ -435,6 +470,7 @@ void Processor::getStateInformation (juce::MemoryBlock& dest)
 
 void Processor::setStateInformation (const void* data, int size)
 {
+    hostStop.requestStop();   // a project/state load starts from silence
     auto xml = getXmlFromBinary (data, size);
     if (xml == nullptr || ! xml->hasTagName (apvts.state.getType())) return;
     if (auto* pat = xml->getChildByName ("Pattern"))

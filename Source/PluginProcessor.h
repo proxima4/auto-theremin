@@ -4,6 +4,7 @@
 #include "dsp/ThereminEngine.h"
 #include "model/CurveModel.h"
 #include "input/Gamepad.h"
+#include "HostStop.h"
 
 namespace at
 {
@@ -21,6 +22,7 @@ public:
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override {}
+    void reset() override { hostStop.requestStop(); }
     bool isBusesLayoutSupported (const BusesLayout&) const override;
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
@@ -96,6 +98,13 @@ private:
     float liveRaw = 0.5f, liveV = 0, prevBlockP = 60, prevBlockV = 0;
     uint32_t lastPress[BtnCount] {};
     bool pressInit = false;
+
+    // FL Studio Stop = silence (see HostStop.h). After a stop, Live mode stays
+    // muted until the player deliberately plays again, so a held trigger or
+    // the "Full" volume source can't drone on by itself.
+    HostStop hostStop;
+    void panic();
+    bool liveMuted = false, liveRearm = false, livePressed = false, lastFieldActive = false;
 
     // midi state
     std::vector<int> heldNotes;
