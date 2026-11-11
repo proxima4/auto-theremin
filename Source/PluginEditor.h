@@ -1,4 +1,5 @@
 #pragma once
+#include "AptVersion.h"
 #include "PluginProcessor.h"
 #include "ui/LookAndFeel.h"
 #include "ui/Widgets.h"
@@ -34,6 +35,7 @@ private:
 
     Processor& proc;
     ui::LookAndFeel lnf;
+    apt::VersionUI versionUi;   // version badge + history (Source/AptVersion.h)
     Content content { *this };
     ui::Textures textures;
     juce::TooltipWindow tooltips { this, 650 };

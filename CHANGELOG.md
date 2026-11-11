@@ -2,6 +2,9 @@
 
 Every version is published automatically as a GitHub Release with the plugin attached (from 11 November 2026), and the APT Industrial updater installs the newest one for you.
 
+## 1.0.4 - 11 November 2026
+- The version number is now shown in the plugin window. Click it to read this version history inside the plugin.
+
 ## 1.0.3 - 9 November 2026
 - FIXED: a note could be dropped when it arrived in an unusually large audio block, and a very short (empty) block could read out of range. MIDI All Notes Off is now always obeyed.
 

@@ -4,7 +4,9 @@ cmake_minimum_required(VERSION 3.22)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-project(AutoTheremin VERSION 1.0.3 LANGUAGES C CXX)
+project(AutoTheremin VERSION 1.0.4 LANGUAGES C CXX)
+
+add_compile_definitions(APT_VERSION="${PROJECT_VERSION}")   # shown on the version badge
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -122,3 +124,13 @@ if(AT_BUILD_TOOLS)
     target_sources(AtRender PRIVATE tools/Render.cpp ${AT_CORE_SOURCES})
     target_sources(AtSnapshot PRIVATE tools/Snapshot.cpp ${AT_CORE_SOURCES})
 endif()
+
+# ---- Version history shown inside the plugin (CHANGELOG.md, see Source/AptVersion.h) ----
+juce_add_binary_data(AutoThereminVersionHistory HEADER_NAME VersionHistoryData.h NAMESPACE VersionHistoryData SOURCES CHANGELOG.md)
+get_property(_apt_targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
+foreach(_apt_t IN LISTS _apt_targets)
+    get_target_property(_apt_src ${_apt_t} SOURCES)
+    if(_apt_src AND "${_apt_src}" MATCHES "PluginEditor\\.cpp")
+        target_link_libraries(${_apt_t} PRIVATE AutoThereminVersionHistory)
+    endif()
+endforeach()

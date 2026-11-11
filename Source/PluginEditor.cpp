@@ -225,6 +225,15 @@ Editor::Editor (Processor& p)
     refreshFromPattern();
     updateToolButtons();
 
+    {
+        apt::VersionStyle vs;
+        vs.veil = juce::Colour (0x99241512); vs.panel = ui::col::enamel; vs.page = juce::Colour (0xfff7f0dd); vs.edge = ui::col::inkSoft;
+        vs.text = ui::col::ink; vs.dim = ui::col::inkSoft; vs.accent = ui::col::cherry;
+        vs.titleFont = ui::fonts().labelFont (26.0f); vs.bodyFont = ui::fonts().labelFont (17.0f); vs.badgeFont = ui::fonts().monoFont (13.0f);
+        vs.productName = "Auto Theremin";
+        versionUi.attach (content, vs, { 1150, 62, 64, 18 });
+    }
+
     setResizable (true, true);
     setResizeLimits (designW * 6 / 10, designH * 6 / 10, designW * 3 / 2, designH * 3 / 2);
     if (auto* c = getConstrainer()) c->setFixedAspectRatio ((double) designW / designH);
